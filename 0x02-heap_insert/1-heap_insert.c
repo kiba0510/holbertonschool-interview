@@ -17,23 +17,23 @@ void swap(int *a, int *b);
  */
 heap_t *heap_insert(heap_t **root, int value)
 {
-    heap_t *runner = *root;
+	heap_t *runner = *root;
 
-    if (*root == NULL)
-    {
-        *root = binary_tree_node(*root, value);
-        return (*root);
-    }
+	if (*root == NULL)
+	{
+		*root = binary_tree_node(*root, value);
+		return (*root);
+	}
 
-    runner = heap_append(*root, value);
+	runner = heap_append(*root, value);
 
-    while (runner->parent && runner->parent->n < runner->n)
-    {
-        swap(&(runner->n), &(runner->parent->n));
-        runner = runner->parent;
-    }
+	while (runner->parent && runner->parent->n < runner->n)
+	{
+		swap(&(runner->n), &(runner->parent->n));
+		runner = runner->parent;
+	}
 
-    return (runner);
+	return (runner);
 }
 
 /**
@@ -44,33 +44,34 @@ heap_t *heap_insert(heap_t **root, int value)
  */
 heap_t *heap_append(heap_t *root, int value)
 {
-    int level, r_pos, size;
-    heap_t *runner = root;
+	int level, r_pos, size;
+	heap_t *runner = root;
 
-    size = count_nodes(runner);
-    index_to_lvl_pos(size, &level, &r_pos);
-    /* printf("counter=%d, level=%d, pos=%d\n", size, level, r_pos); */
 
-    while (level > 1)
-    {
-        if (((r_pos >> (level - 1)) & 1) == 1)
-            runner = runner->right;
-        else
-            runner = runner->left;
-        level--;
-    }
-    if ((r_pos & 1) == 1)
-    {
-        runner->right = binary_tree_node(runner, value);
-        runner = runner->right;
-    }
-    else
-    {
-        runner->left = binary_tree_node(runner, value);
-        runner = runner->left;
-    }
+	size = count_nodes(runner);
+	index_to_lvl_pos(size, &level, &r_pos);
+	/* printf("counter=%d, level=%d, pos=%d\n", size, level, r_pos); */
 
-    return (runner);
+	while (level > 1)
+	{
+		if (((r_pos >> (level - 1)) & 1) == 1)
+			runner = runner->right;
+		else
+			runner = runner->left;
+		level--;
+	}
+	if ((r_pos & 1) == 1)
+	{
+		runner->right = binary_tree_node(runner, value);
+		runner = runner->right;
+	}
+	else
+	{
+		runner->left = binary_tree_node(runner, value);
+		runner = runner->left;
+	}
+
+	return (runner);
 }
 
 /**
@@ -81,9 +82,9 @@ heap_t *heap_append(heap_t *root, int value)
 int count_nodes(heap_t *root)
 {
 
-    if (root == NULL)
-        return (0);
-    return (1 + count_nodes(root->left) + count_nodes(root->right));
+	if (root == NULL)
+		return (0);
+	return (1 + count_nodes(root->left) + count_nodes(root->right));
 }
 
 /**
@@ -105,16 +106,16 @@ int count_nodes(heap_t *root)
  */
 void index_to_lvl_pos(int index, int *level, int *position)
 {
-    int offset;
+	int offset;
 
-    *level = 0;
-    while (POW2(*level + 1) - 1 <= index)
-    {
-        (*level)++;
-    }
+	*level = 0;
+	while (POW2(*level + 1) - 1 <= index)
+	{
+		(*level)++;
+	}
 
-    offset = (POW2(*level)) - 1;
-    *position = index - offset;
+	offset = (POW2(*level)) - 1;
+	*position = index - offset;
 }
 
 /**
@@ -124,7 +125,7 @@ void index_to_lvl_pos(int index, int *level, int *position)
  */
 void swap(int *a, int *b)
 {
-    *a = *a ^ *b;
-    *b = *a ^ *b;
-    *a = *a ^ *b;
+	*a = *a ^ *b;
+	*b = *a ^ *b;
+	*a = *a ^ *b;
 }
