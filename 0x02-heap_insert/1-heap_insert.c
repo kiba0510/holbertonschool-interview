@@ -1,121 +1,130 @@
-#include <stdlib.h>
-#include <stdio.h>
 #include "binary_trees.h"
+#define POW2(x) (1 << (x))
+
+heap_t *heap_append(heap_t *root, int value);
+int count_nodes(heap_t *root);
+void index_to_lvl_pos(int index, int *level, int *position);
+void swap(int *a, int *b);
 
 /**
- * count_nodes - count nodes
- * @root: double pointer
+ * heap_insert - insert value into a Max Binary Heap
+ * @root: a reference of a pointer to the root of the Heap
+ * @value: the value to store in the node to be inserted
  *
+ * Description: If the root is NULL. The created node becoma the root
+ * The program respect the Max Heap
+ * Return: a pointer to inserted node or NULL of failure
+ */
+heap_t *heap_insert(heap_t **root, int value)
+{
+    heap_t *runner = *root;
+
+    if (*root == NULL)
+    {
+        *root = binary_tree_node(*root, value);
+        return (*root);
+    }
+
+    runner = heap_append(*root, value);
+
+    while (runner->parent && runner->parent->n < runner->n)
+    {
+        swap(&(runner->n), &(runner->parent->n));
+        runner = runner->parent;
+    }
+
+    return (runner);
+}
+
+/**
+ * heap_append - insert node at the end of the heap (a complete binary tree)
+ * @root: reference to pointer of the root of the binary tree
+ * @value: value of node (int)
+ * Return: a pointer to the new node
+ */
+heap_t *heap_append(heap_t *root, int value)
+{
+    int level, r_pos, size;
+    heap_t *runner = root;
+
+    size = count_nodes(runner);
+    index_to_lvl_pos(size, &level, &r_pos);
+    /* printf("counter=%d, level=%d, pos=%d\n", size, level, r_pos); */
+
+    while (level > 1)
+    {
+        if (((r_pos >> (level - 1)) & 1) == 1)
+            runner = runner->right;
+        else
+            runner = runner->left;
+        level--;
+    }
+    if ((r_pos & 1) == 1)
+    {
+        runner->right = binary_tree_node(runner, value);
+        runner = runner->right;
+    }
+    else
+    {
+        runner->left = binary_tree_node(runner, value);
+        runner = runner->left;
+    }
+
+    return (runner);
+}
+
+/**
+ * count_nodes - count number of nodes
+ * @root: pointer to root of tree
  * Return: number of nodes
  */
 int count_nodes(heap_t *root)
 {
-    int n;
 
     if (root == NULL)
         return (0);
-    if (root)
-        n = 1;
-    n += count_nodes(root->left);
-    n += count_nodes(root->right);
-
-    return (n);
+    return (1 + count_nodes(root->left) + count_nodes(root->right));
 }
 
 /**
- * is_perfect - function that checks if a tree is perfect
- * @tree: pointer to the root
- * Return: 1 if true or 0 if false
- */
-
-int is_perfect(const heap_t *tree)
-{
-    int p1, p2;
-
-    if (tree == NULL)
-        return (0);
-    p1 = count_nodes(tree->left);
-    p2 = count_nodes(tree->right);
-    if (p1 == p2)
-        return (1);
-    return (0);
-}
-
-/**
- * find_parent - find the parent to insert a new child
- * @root: double pointer to the root node of the heap
+ * index_to_lvl_pos - convert index to level and position in a complete binary
+ * @index: the index in the equivalent array of the heap
+ * @level: an int reference for the level (every level is a new child)
+ * @position: an int reference for the relative position in the level
  *
- * Return: pointer to the parent node
- */
-heap_t *find_parent(heap_t *root)
-{
-    heap_t *p;
-    int l, r, lf, rf;
-
-    if (root == NULL)
-        return (NULL);
-
-    p = root;
-    l = count_nodes(p->left);
-    r = count_nodes(p->right);
-    lf = is_perfect(p->left);
-    rf = is_perfect(p->right);
-
-    if (!l || !r)
-        return (p);
-    if (!lf || (lf && rf && l == r))
-        return (find_parent(p->left));
-    else if (!rf || (lf && rf && l > r))
-        return (find_parent(p->right));
-    return (p);
-}
-
-/**
- * sort_nodes - sort a child and a parent node
- * @new: inserted node
+ * Example:
+ *   |         index         Level   position (in the Level)
+ *   |           0             0               0
+ *   |       1       2         1           0       1
+ *   |     3   4   5   6       2         0   1   2   3
+ *   |    7 8 9 A B C D E      3        0 1 2 3 4 5 6 7
  *
- * Return: nothing
+ * offset = 2^level - 1
+ * level:  0, 1, 2, 3,  4,  5
+ * offset: 0, 1, 3, 7, 15, 32
  */
-void sort_nodes(heap_t **new)
+void index_to_lvl_pos(int index, int *level, int *position)
 {
-    heap_t *current;
-    int aux;
+    int offset;
 
-    current = *new;
-    while (current->parent)
+    *level = 0;
+    while (POW2(*level + 1) - 1 <= index)
     {
-        if (current->parent->n < current->n)
-        {
-            aux = current->parent->n;
-            current->parent->n = current->n;
-            current->n = aux;
-            *new = current->parent;
-        }
-        current = current->parent;
+        (*level)++;
     }
-}
-/**
- * heap_insert - inserts a value into a Max Binary Heap
- * @root: double pointer to the root node of the Heap
- * @value: value store in the node to be inserted
- *
- * Return: a pointer to the new node, or NULL on failure
- */
-heap_t *heap_insert(heap_t **root, int value)
-{
-    heap_t *new;
-    heap_t *parent;
 
-    parent = find_parent(*root);
-    new = binary_tree_node(parent, value);
-    if (new == NULL)
-        return (NULL);
-    if (parent == NULL)
-        *root = new;
-    else if (!(parent->left))
-        parent->left = new;
-    else
-        parent->right = new;
-    sort_nodes(&new);
-    return (new);
+    offset = (POW2(*level)) - 1;
+    *position = index - offset;
+}
+
+/**
+ * swap - swap 2 variables
+ * @a: a reference to the value
+ * @b: a reference to the value
+ */
+void swap(int *a, int *b)
+{
+    *a = *a ^ *b;
+    *b = *a ^ *b;
+    *a = *a ^ *b;
 }
